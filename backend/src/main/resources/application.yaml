@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: echo-grove-backend
+  datasource:
+    # Embedded file database: no DB server needed. The data/ folder is git-ignored.
+    url: jdbc:h2:file:./data/echogrove
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  jackson:
+    mapper:
+      # Lets the frontend send "spring" or "SPRING"
+      accept-case-insensitive-enums: true
+
+server:
+  port: ${PORT:8080}
+
+echogrove:
+  cors:
+    # Comma-separated. Add the deployed frontend URL through the ALLOWED_ORIGINS env variable.
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
