@@ -6,11 +6,12 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /** Parameters sent by the frontend when a user saves a garden. Ranges match the UI sliders. */
 public record GardenRequest(
-        @Size(max = 60) String name,
+        @Size(max = 60) @Pattern(regexp = "^[\\p{L}\\p{N} .,'!?&()-]*$", message = "Letters, numbers and simple punctuation only") String name,
         @NotNull Long seed,
         @NotNull @Min(1) @Max(8) Integer depth,
         @NotNull @Min(2) @Max(3) Integer branches,
@@ -20,7 +21,8 @@ public record GardenRequest(
         @NotNull Season season,
         @NotNull @Min(48) @Max(80) Integer tempo,
         @NotNull @DecimalMin("0") @DecimalMax("1") Double wind,
-        @NotNull ListenMode mode
+        @NotNull ListenMode mode,
+        Boolean publish
 ) {
 
     /** Same safety cap as the frontend: at most 700 recursive calls per tree. */

@@ -2,11 +2,14 @@ package com.echogrove.preset;
 
 import com.echogrove.garden.ListenMode;
 import com.echogrove.garden.Season;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/presets")
@@ -27,8 +30,9 @@ public class PresetController {
                     42L, 6, 2, 35, 0.68, 0.8, Season.NIGHT, 56, 0.15, ListenMode.BLOOM)
     );
 
+    /** Static data: browsers may cache it for an hour. */
     @GetMapping
-    public List<PresetResponse> all() {
-        return PRESETS;
+    public ResponseEntity<List<PresetResponse>> all() {
+        return ResponseEntity.ok().cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic()).body(PRESETS);
     }
 }

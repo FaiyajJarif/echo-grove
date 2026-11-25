@@ -15,13 +15,17 @@ public record GardenResponse(
         int tempo,
         double wind,
         ListenMode mode,
-        Instant createdAt
+        Instant createdAt,
+        boolean published,
+        boolean hidden,
+        String ownerName
 ) {
 
     public static GardenResponse from(Garden g) {
         return new GardenResponse(
                 g.getCode(), g.getName(), g.getSeed(), g.getDepth(), g.getBranches(),
                 g.getSpread(), g.getRatio(), g.getAsymmetry(), g.getSeason(),
-                g.getTempo(), g.getWind(), g.getMode(), g.getCreatedAt());
+                g.getTempo(), g.getWind(), g.getMode(), g.getCreatedAt(),
+                g.isPublished(), g.isHidden(), g.getOwner() == null ? null : g.getOwner().getDisplayName());
     }
 }

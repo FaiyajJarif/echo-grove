@@ -2,10 +2,13 @@ spring:
   application:
     name: echo-grove-backend
   datasource:
-    # Embedded file database: no DB server needed. The data/ folder is git-ignored.
+    # Embedded file database for development; the data/ folder is git-ignored.
+    # For the live server set SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD to a hosted PostgreSQL or MySQL.
     url: jdbc:h2:file:./data/echogrove
     username: sa
     password: ""
+    hikari:
+      maximum-pool-size: 10
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,11 +17,36 @@ spring:
     mapper:
       # Lets the frontend send "spring" or "SPRING"
       accept-case-insensitive-enums: true
+  # Mail: set SPRING_MAIL_HOST, SPRING_MAIL_PORT, SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD,
+  # SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true and SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true.
+  # Without them, verification links are printed to the server log (development).
 
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: native
+  error:
+    include-stacktrace: never
+  compression:
+    enabled: true
+    mime-types: application/json,application/problem+json
+  tomcat:
+    threads:
+      max: 50
 
 echogrove:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
   cors:
-    # Comma-separated. Add the deployed frontend URL through the ALLOWED_ORIGINS env variable.
+    # Comma-separated. Add the deployed frontend URL through ALLOWED_ORIGINS.
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  jwt:
+    # At least 32 characters. If missing, a random key is used and logins end on restart.
+    secret: ${JWT_SECRET:}
+    ttl-minutes: 60
+  mail:
+    from: ${MAIL_FROM:Echo Grove <no-reply@echogrove.app>}
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+  rate-limit:
+    enabled: true
+

@@ -4,11 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.echogrove.user.User;
 
 import java.time.Instant;
 
@@ -17,7 +21,9 @@ import java.time.Instant;
  * The tree and its music are fully reproducible from these values in the browser.
  */
 @Entity
-@Table(name = "gardens")
+@Table(name = "gardens", indexes = {
+        @Index(name = "idx_gardens_created", columnList = "created_at"),
+        @Index(name = "idx_gardens_owner", columnList = "owner_id")})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -51,4 +57,16 @@ public class Garden {
 
     @Column(nullable = false)
     private Instant createdAt;
+
+    /** Who saved it. Null only for gardens created before accounts existed. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User owner;
+
+    /** Shown in the public gallery (requires a verified email). */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean published;
+
+    /** Hidden by an admin: removed from the gallery and from share codes. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean hidden;
 }

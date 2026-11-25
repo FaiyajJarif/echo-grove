@@ -11,5 +11,16 @@ spring:
       accept-case-insensitive-enums: true
 
 echogrove:
+  frontend-url: http://localhost:5173
   cors:
     allowed-origins: http://localhost:5173
+  jwt:
+    secret: test-secret-test-secret-test-secret-1234
+    ttl-minutes: 60
+  mail:
+    from: test@echogrove.app
+  admin:
+    email: admin@test.dev
+    password: admin-password-123
+  rate-limit:
+    enabled: false

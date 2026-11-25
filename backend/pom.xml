@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Adapted from the PawHome backend pom: same Boot parent, Java 17 and Lombok setup.
-         Removed for this project: MySQL, Flyway, Security/JWT, Mail, WebSocket, MapStruct.
+         Removed for this project: MySQL, Flyway, WebSocket, MapStruct.
          The music runs in the browser; this API only stores and serves gardens. -->
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -47,6 +47,35 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Security: JWT login, roles (USER, ADMIN) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Email verification -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Lombok. Version managed by the Boot parent (works on newer JDKs than 1.18.30). -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -58,6 +87,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
