@@ -23,6 +23,7 @@ To connect the backend, copy `.env.example` to `.env` and set `VITE_API_URL`.
 | `#/signin` | Sign in / create account |
 | `#/verify?token=` | Email verification |
 | `#/admin` | Gallery moderation (admins) |
+| `#/g/<code>` | Opens a saved garden by its share code |
 
 ## Code map
 

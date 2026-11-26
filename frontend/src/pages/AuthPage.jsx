@@ -3,6 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { auth, OfflineError } from '../api/client';
 import { useToast } from '../ui/Toast';
 import { Icon } from '../ui/Icons';
+import InfoTip from '../ui/InfoTip';
+
+export const PASSWORD_RULES = [
+  ['8 to 72 characters', (p) => p.length >= 8 && p.length <= 72],
+  ['At least one letter (a–z)', (p) => /[A-Za-z]/.test(p)],
+  ['At least one number (0–9)', (p) => /\d/.test(p)],
+  ['At least one special character (! @ # $ % - _ …)', (p) => /[^A-Za-z0-9]/.test(p)],
+];
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME = /^[\p{L}\p{N} .,'!?-]{2,40}$/u;
@@ -23,7 +31,8 @@ export default function AuthPage() {
     const e = {};
     if (!EMAIL.test(form.email.trim())) e.email = 'Enter a valid email address';
     if (register && !NAME.test(form.name.trim())) e.name = '2 to 40 letters, numbers or simple punctuation';
-    if (form.password.length < 8 || form.password.length > 72) e.password = 'Use 8 to 72 characters';
+    if (register && !PASSWORD_RULES.every(([, ok]) => ok(form.password))) e.password = 'Your password doesn\'t meet all the rules below yet';
+    if (!register && !form.password) e.password = 'Enter your password';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -66,19 +75,37 @@ export default function AuthPage() {
         </label>
         {register && (
           <label className="input-field">
-            <span>Display name</span>
+            <span className="label-row">Display name
+              <InfoTip label="Display name rules">2 to 40 characters: letters, numbers, spaces and . , ' ! ? -. Shown in the gallery.</InfoTip>
+            </span>
             <input className="input" autoComplete="nickname" maxLength={40} value={form.name} onChange={set('name')} aria-invalid={!!errors.name} />
             {errors.name && <em role="alert">{errors.name}</em>}
           </label>
         )}
         <label className="input-field">
-          <span>Password</span>
+          <span className="label-row">Password
+            {register && (
+              <InfoTip label="Password rules">
+                <strong>Your password needs:</strong>
+                {PASSWORD_RULES.map(([r]) => <span key={r} className="tip-line">• {r}</span>)}
+                <span className="tip-line muted">Stored only as a secure hash. 5 wrong tries lock sign-in for 15 minutes.</span>
+              </InfoTip>
+            )}
+          </span>
           <div className="pw">
             <input className="input" type={show ? 'text' : 'password'} autoComplete={register ? 'new-password' : 'current-password'}
               maxLength={72} value={form.password} onChange={set('password')} aria-invalid={!!errors.password} />
             <button type="button" className="icon-btn" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow((s) => !s)}><Icon.eye /></button>
           </div>
           {errors.password && <em role="alert">{errors.password}</em>}
+          {register && (
+            <ul className="rules" aria-label="Password rules">
+              {PASSWORD_RULES.map(([r, ok]) => {
+                const pass = ok(form.password);
+                return <li key={r} className={pass ? 'ok' : ''}><span className="tick" aria-hidden="true">{pass ? <Icon.check /> : '•'}</span>{r}<span className="sr-only">{pass ? ' (met)' : ' (not met yet)'}</span></li>;
+              })}
+            </ul>
+          )}
         </label>
 
         {notice && <p className="notice" role="status">{notice}</p>}

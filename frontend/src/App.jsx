@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Route, Routes, Link, useLocation } from 'react-router-dom';
 import { api } from './api/client';
 import GardenCodePage from './pages/GardenCodePage';
+import ErrorBoundary from './ui/ErrorBoundary';
 import TopBar from './ui/TopBar';
 import { ToastProvider } from './ui/Toast';
 import GrovePage from './pages/GrovePage';
@@ -31,6 +32,7 @@ export default function App() {
       <div className={`app ${pathname === '/' ? 'on-grove' : ''}`}>
         <TopBar />
         <div id="main" className="app-main" tabIndex={-1}>
+          <ErrorBoundary key={pathname}>
           <Routes>
             <Route path="/" element={<GrovePage />} />
             <Route path="/gallery" element={<GalleryPage />} />
@@ -41,6 +43,7 @@ export default function App() {
             <Route path="/g/:code" element={<GardenCodePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ErrorBoundary>
         </div>
       </div>
     </ToastProvider>

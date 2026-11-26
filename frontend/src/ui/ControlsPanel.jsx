@@ -28,7 +28,7 @@ export default function ControlsPanel({ params, update, season, setSeason, apply
         </div>
 
         {SLIDERS.map((s) => (
-          <Slider key={s.key} id={`p-${s.key}`} {...s} max={s.key === 'depth' ? maxDepth : s.max}
+          <Slider key={s.key} id={`p-${s.key}`} label={s.label} min={s.min} step={s.step} fmt={s.fmt} hint={s.hint} max={s.key === 'depth' ? maxDepth : s.max}
             value={params[s.key]} onChange={(v) => update(s.key, v)} />
         )).reduce((acc, el, i) => (i === 1 ? [...acc, (
           <div className="field" key="branches">

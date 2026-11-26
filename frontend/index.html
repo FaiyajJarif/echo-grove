@@ -13,6 +13,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // If the app can't start (old browser, opened as a file, script error), explain instead of a blank page.
+      window.__bootErrors = [];
+      window.addEventListener('error', function (e) { window.__bootErrors.push(e.message || String(e)); });
+      setTimeout(function () {
+        var r = document.getElementById('root');
+        if (r && !r.children.length) {
+          var errs = window.__bootErrors.join('\n').replace(/</g, '&lt;');
+          r.innerHTML = '<div style="font:15px/1.5 system-ui,sans-serif;color:#f3f4ff;background:#1f1b66;padding:32px;margin:40px auto;max-width:640px;border-radius:18px">' +
+            '<h2 style="margin:0 0 8px">Echo Grove could not start</h2>' +
+            '<p>Run <code>npm run dev</code> in the <code>frontend</code> folder and open http://localhost:5173 in Chrome, Edge, Firefox or Safari 16+. Opening index.html directly does not work.</p>' +
+            (errs ? '<pre style="white-space:pre-wrap;color:#fecaca">' + errs + '</pre>' : '') + '</div>';
+        }
+      }, 4000);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

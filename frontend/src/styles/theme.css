@@ -205,3 +205,20 @@ input[type='range']::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
 .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 10px 8px; border-bottom: 1px solid var(--stroke); }
 .table td { padding: 10px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); white-space: nowrap; }
+
+/* Info tips and password checklist */
+.label-row { display: inline-flex; align-items: center; gap: 6px; }
+.infotip { position: relative; display: inline-flex; }
+.info-btn { display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 1px solid var(--stroke); background: rgba(255, 255, 255, 0.08); color: var(--acc1); }
+.info-btn:hover { background: rgba(94, 234, 212, 0.18); }
+.tip-bubble {
+  position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); z-index: 50; width: 270px;
+  display: grid; gap: 4px; padding: 12px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 400; line-height: 1.45;
+  background: rgba(36, 30, 110, 0.97); text-align: left;
+}
+.tip-line { display: block; }
+.rules { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; font-size: 12.5px; font-weight: 400; color: var(--muted); }
+.rules li { display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+.rules li.ok { color: #86efac; }
+.rules .tick { display: inline-grid; place-items: center; width: 16px; }
+@media (max-width: 760px) { .tip-bubble { left: 0; transform: none; width: min(270px, 80vw); } }

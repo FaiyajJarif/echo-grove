@@ -143,6 +143,7 @@ export function pause() {
 }
 
 export function stop() {
+  if (!graph) return;
   const tr = Tone.getTransport();
   tr.stop();
   tr.cancel(0);

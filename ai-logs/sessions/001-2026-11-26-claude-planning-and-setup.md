@@ -696,3 +696,92 @@ If `mvn test` shows any error, paste it here and I'll fix it.
 ### Result
 
 - Not committed yet.
+
+---
+
+## Prompt 11 (03:23 GMT+6)
+
+### Prompt (verbatim)
+
+```text
+the screen is total white, nothing is showing, also give the restrain and i icon so that users know what type of restrictions are for pass word 
+like 6 digits special char etc
+```
+
+### Agent response (verbatim)
+
+I couldn't reproduce the white screen. Your exact code runs in dev mode (`npm run dev`) in Chrome here with no errors, so something on your side is stopping it from starting. I've made it so that can't happen silently anymore:
+
+- **If the app can't start,** the page now shows "Echo Grove could not start", what to do and the actual error, instead of white.
+- **If a page crashes later,** you'll see "Something went wrong", the error and a Reload button.
+- **Fixed** two console warnings, and stopped the audio engine from starting on page load.
+- **Added** a fallback for older Safari versions.
+
+**Please try again:**
+
+```bash
+cd ~/Documents/DevHub/frontend
+npm install
+npm run dev
+```
+
+Then open **http://localhost:5173** in Chrome. The most common cause of a white page is opening `index.html` directly from Finder, which can't work with Vite.
+
+If it's still blank or shows the new error box, send me three things:
+1. A screenshot.
+2. Which browser you're using.
+3. Any red text from the console (Cmd + Option + J in Chrome; in Safari, Develop → Show JavaScript Console).
+
+**Password rules** (sign-up page):
+- The ⓘ next to Password lists what's required: 8 to 72 characters, at least one letter, at least one number and at least one special character. It also mentions the 15-minute lockout.
+- A live checklist under the field turns green as each rule is met, and screen readers announce each rule's state.
+- Display name has its own ⓘ too.
+- The backend enforces the same password rule.
+
+This is logged as prompt 11.
+
+### Actions taken by the agent
+
+- Ran the Vite dev server in the agent workspace and loaded it in headless Chrome: the app rendered with no errors (only a React key-spread warning and an AudioContext autoplay warning).
+- Added `ErrorBoundary.jsx`, a boot fallback script in `index.html`, Safari `matchMedia` fallback, React Router v7 future flags; fixed the key-spread warning in `ControlsPanel.jsx`; guarded `engine.stop()` so no AudioContext is created on page load.
+- Added `InfoTip.jsx`, info/check icons, password rules ⓘ and live checklist in `AuthPage.jsx`, styles in `theme.css`; screenshot-checked the sign-up form.
+- Backend: `AuthDtos.RegisterRequest` password now also requires a letter, a number and a special character.
+- Copied 11 frontend files to `DevHub/frontend/`.
+
+### Result
+
+- Not committed yet.
+
+---
+
+## Prompt 12 (03:26 GMT+6)
+
+### Prompt (verbatim)
+
+Attachment: screenshot of Safari showing the new "Echo Grove could not start" box with `SyntaxError: Importing binding name 'admin' is not found.`
+
+```text
+(no text, screenshot only)
+```
+
+### Agent response (verbatim)
+
+Found it, and it was my mistake. When I copied the v1 changes to your Mac, the copy tool sent an older cached version of `src/api/client.js`, which doesn't have the `admin` functions. The Admin page imports them, so the whole app failed to load. That was also the cause of your white screen.
+
+**Fixed:**
+- I compared checksums of all 39 frontend files between my copy and your Mac. Only `client.js` and the frontend README were stale.
+- I resent both and confirmed the checksums now match.
+
+**What to do:** reload the page with Cmd + Shift + R. Vite should pick up the change on its own, but Safari sometimes keeps the old module cached. If anything still looks wrong, restart `npm run dev`.
+
+From now on I'll check checksums after every copy to your Mac, so this doesn't happen again. This is logged as prompt 12.
+
+### Actions taken by the agent
+
+- Read the error from the screenshot; checked `src/api/client.js` on the Mac (old 2615-byte version with no `admin` export).
+- Compared md5 checksums of all 39 frontend files (agent copy vs Mac): `src/api/client.js` and `README.md` differed.
+- Re-staged both under new file names, copied them to the Mac and verified the checksums match.
+
+### Result
+
+- Not committed yet.

@@ -15,7 +15,9 @@ public final class AuthDtos {
     public record RegisterRequest(
             @NotBlank @Email @Size(max = 254) String email,
             @NotBlank @Pattern(regexp = "^[\\p{L}\\p{N} .,'!?-]{2,40}$", message = "2 to 40 letters, numbers or simple punctuation") String displayName,
-            @NotBlank @Size(min = 8, max = 72, message = "Use 8 to 72 characters") String password) {
+            @NotBlank @Size(min = 8, max = 72, message = "Use 8 to 72 characters")
+            @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).*$",
+                    message = "Use at least one letter, one number and one special character") String password) {
     }
 
     public record LoginRequest(@NotBlank @Email @Size(max = 254) String email, @NotBlank @Size(max = 72) String password) {
