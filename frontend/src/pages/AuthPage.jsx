@@ -45,7 +45,13 @@ export default function AuthPage() {
     try {
       if (register) {
         await auth.register(form.email.trim(), form.name.trim(), form.password);
-        setNotice('Check your inbox: we sent a link to verify your email. It works once and expires in 24 hours.');
+        try {
+          await auth.login(form.email.trim(), form.password);
+          toast('Welcome to Echo Grove! Your account is ready.');
+          navigate('/my-grove');
+        } catch {
+          setNotice('This email may already have an account. Try signing in instead.');
+        }
       } else {
         await auth.login(form.email.trim(), form.password);
         toast('Welcome back');

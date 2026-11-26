@@ -22,6 +22,27 @@ export function createRenderer(canvas, { ring = true } = {}) {
   const petals = [];
   let last = performance.now();
   let spawnAcc = 0;
+  let canopySprite = null;
+  let flowerSprite = null;
+
+  /** Pre-rendered images, drawn once per season instead of every frame. */
+  function makeSprites() {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    rg.addColorStop(0, rgba(leafC, 0.24)); rg.addColorStop(1, rgba(leafC, 0));
+    g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
+    canopySprite = c;
+    const f = document.createElement('canvas'); f.width = f.height = 32;
+    const h = f.getContext('2d');
+    h.fillStyle = rgba(bloom, 0.95);
+    for (let k = 0; k < 5; k++) {
+      const a = (k * Math.PI * 2) / 5 - Math.PI / 2;
+      h.beginPath(); h.arc(16 + Math.cos(a) * 7, 16 + Math.sin(a) * 7, 6, 0, Math.PI * 2); h.fill();
+    }
+    h.fillStyle = rgba(glow, 1); h.beginPath(); h.arc(16, 16, 4, 0, Math.PI * 2); h.fill();
+    flowerSprite = f;
+  }
 
   function fit() {
     if (!tree || !W) return;
@@ -34,7 +55,7 @@ export function createRenderer(canvas, { ring = true } = {}) {
 
   function resize() {
     const r = canvas.getBoundingClientRect();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
     W = r.width; H = r.height;
     canvas.width = Math.max(1, Math.round(W * dpr));
     canvas.height = Math.max(1, Math.round(H * dpr));
@@ -51,6 +72,7 @@ export function createRenderer(canvas, { ring = true } = {}) {
       return `rgb(${mix(base, tint, 0.25)})`;
     });
     glow = rgb(S.palette.glow); bloom = rgb(S.palette.bloom); leafC = rgb(S.palette.tip);
+    makeSprites();
     pos = new Float32Array(t.nodes.length * 4);
     bloomed = new Uint8Array(t.nodes.length);
     petals.length = 0;
@@ -73,15 +95,9 @@ export function createRenderer(canvas, { ring = true } = {}) {
     ctx.quadraticCurveTo(qx, qy, rx, ry);
   }
 
-  function flower(x, y, r, i) {
-    const rot = (i * 1.3) % (Math.PI * 2);
-    ctx.fillStyle = rgba(bloom, 0.92);
-    for (let k = 0; k < 5; k++) {
-      const a = rot + (k * Math.PI * 2) / 5;
-      ctx.beginPath(); ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, r * 0.85, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = rgba(glow, 1);
-    ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0, Math.PI * 2); ctx.fill();
+  function flower(x, y, r) {
+    const size = r * 4.6;
+    ctx.drawImage(flowerSprite, x - size / 2, y - size / 2, size, size);
   }
 
   function frame(now, { started = false, stack = [], progress = 0 } = {}) {
@@ -154,10 +170,7 @@ export function createRenderer(canvas, { ring = true } = {}) {
       if (n.depth < D - 1 || now < comp.t[i] + comp.g[i] * 0.5) continue;
       const x = X(pos[i * 4 + 2]); const y = Y(pos[i * 4 + 3]);
       const r = (n.leaf ? 16 : 11) * scale;
-      const cg = ctx.createRadialGradient(x, y, 0, x, y, r);
-      cg.addColorStop(0, rgba(leafC, 0.22)); cg.addColorStop(1, rgba(leafC, 0));
-      ctx.fillStyle = cg;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.drawImage(canopySprite, x - r, y - r, r * 2, r * 2);
     }
 
     // Bark: curved, tapering branches, batched by depth.
@@ -176,13 +189,15 @@ export function createRenderer(canvas, { ring = true } = {}) {
     // Glow along the current call stack and on branches whose note just started.
     const hot = new Set(stack);
     for (let i = 0; i < N; i++) if (now >= comp.t[i] && now - comp.t[i] < 0.35) hot.add(i);
-    ctx.shadowColor = rgba(glow, 0.9); ctx.shadowBlur = 10; ctx.strokeStyle = rgba(glow, 0.85);
-    for (const i of hot) {
-      if (now < comp.t[i]) continue;
-      ctx.lineWidth = Math.max(1.4, s * 0.075 * Math.pow(0.66, nodes[i].depth) * 0.55);
-      ctx.beginPath(); branchPath(i, Math.min(1, (now - comp.t[i]) / comp.g[i])); ctx.stroke();
+    // Soft halo (wide, faint) then the bright core: looks like a glow without the cost of shadowBlur.
+    for (const [alpha, widen] of [[0.18, 3.2], [0.9, 1]]) {
+      ctx.strokeStyle = rgba(glow, alpha);
+      for (const i of hot) {
+        if (now < comp.t[i]) continue;
+        ctx.lineWidth = Math.max(1.4, s * 0.075 * Math.pow(0.66, nodes[i].depth) * 0.55) * widen;
+        ctx.beginPath(); branchPath(i, Math.min(1, (now - comp.t[i]) / comp.g[i])); ctx.stroke();
+      }
     }
-    ctx.shadowBlur = 0;
 
     // Blossoms: three five-petal flowers per leaf, opening when the leaf's chime rings.
     const open = [];
@@ -194,7 +209,7 @@ export function createRenderer(canvas, { ring = true } = {}) {
       const x = X(pos[i * 4 + 2]); const y = Y(pos[i * 4 + 3]);
       for (let f = 0; f < 3; f++) {
         const a = i * 2.1 + f * 2.2;
-        flower(x + Math.cos(a) * 5 * scale * (f ? 1 : 0), y + Math.sin(a) * 5 * scale * (f ? 1 : 0), (1.4 + ((i + f) % 3) * 0.35) * scale * k, i + f);
+        flower(x + Math.cos(a) * 5 * scale * (f ? 1 : 0), y + Math.sin(a) * 5 * scale * (f ? 1 : 0), (1.4 + ((i + f) % 3) * 0.35) * scale * k);
       }
       if (age < 1.2) {
         ctx.strokeStyle = rgba(glow, (1 - age / 1.2) * 0.6); ctx.lineWidth = 1.2;

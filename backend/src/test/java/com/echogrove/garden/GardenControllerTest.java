@@ -72,7 +72,7 @@ class GardenControllerTest {
     }
 
     @Test
-    void unverifiedUserCannotSaveAndWrongPasswordsLockTheAccount() throws Exception {
+    void newUserCanSaveRightAwayAndWrongPasswordsLockTheAccount() throws Exception {
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"new@test.dev\",\"displayName\":\"New Gardener\",\"password\":\"password-123\"}"))
                 .andExpect(status().isAccepted());
@@ -80,7 +80,7 @@ class GardenControllerTest {
         String token = login("new@test.dev", "password-123");
         mvc.perform(post("/api/gardens").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON).content(GARDEN))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
 
         for (int i = 0; i < 5; i++) {
             mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)

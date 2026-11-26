@@ -1374,3 +1374,90 @@ git add . && git commit -m "fix(audio): remove low buzz; feat: tonic pulse with 
 ### Result
 
 - Not committed yet.
+
+---
+
+## Prompt 21 (10:48 GMT+6)
+
+### Prompt (verbatim)
+
+```text
+for now remove the email verification 
+a direct login with email and apss 
+also why the browser is becoming too slow 
+and the rendering takes too much time make it fixed
+and tell about our progress aboiut the probloem set and how much progress is done are we ready to submit or not
+```
+
+### Agent response (verbatim)
+
+All three are done. Restart the backend (`mvn spring-boot:run`) and reload the page.
+
+**Email verification is off. Create an account and you're signed in straight away.**
+- New accounts can save gardens immediately.
+- Accounts you created earlier are marked verified the next time they sign in.
+- The verify and resend endpoints are still in the code, switched off, so they can come back in v2.
+- Updated the backend test to match: a new user saves right away. The lockout after 5 wrong passwords still applies.
+
+**Why it was slow, and the fix.** I measured the frame rate with a full tree playing. Headless Chrome has no GPU, so the absolute numbers are low, but they show what costs the most:
+
+| Change | Frames per second |
+| --- | --- |
+| Before | 5 |
+| Lighter background animation and canvas | 13–15 |
+| No live blur on the big panels | **21 (about 4× faster)** |
+
+1. **The biggest cost was frosted-glass blur over a moving background.** Every glass panel was re-blurred on every frame. The big panels and the bottom bar now use a tinted glass that looks almost the same without blurring what's behind. The top bar, pop-ups and keyboard drawer keep the real blur.
+2. **The aurora** now moves smoothly without the expensive blur, and the panel shimmer and grid no longer animate.
+3. **The tree canvas:**
+   - Canopy glows and blossoms are drawn once as small images and reused, instead of being rebuilt every frame (that was about 130 gradients and 1,150 circles).
+   - The glow along the current call no longer uses a costly blur.
+   - Drawing resolution is capped a little lower on Retina screens.
+4. **The side panels** refresh 5 times a second instead of 10.
+
+On your Mac it should now feel smooth. If it still lags, tell me which browser you're using; Brave shields can slow audio pages.
+
+**Are we ready to submit? Not yet, but we're close.** It's 10:55; 10 hours to the deadline, and we're aiming for 21:00.
+
+| | Status |
+| --- | --- |
+| Required deliverables 1–5 | Done |
+| Deliverable 6 (polished, accessible) | Mostly. A final phone and Safari check is left |
+| Relaxation (35%) and Music (25%) | Strong now. Needs your 2-minute listening check after the buzz fix |
+| Recursion (15%), Visual (10%), Interaction (10%) | Done to a high level |
+| Technical (5%) | Good: tests, security and Postgres. Not deployed |
+| GitHub repo and AI logs | Done and up to date (prompt 21) |
+| **Root README** | **Missing** |
+| **Live demo link** | **Missing** |
+| **Demo video** | Missing, and may not be required |
+| **Sample WAV in the repo** | Missing |
+| **Chat exported as PDF into `ai-logs/raw/`** | Missing; do this at the very end |
+| **Submission portal** | Opens around 12:00 |
+
+**The remaining work is about 2–3 hours, and it's all submission work, not features:**
+1. Listening check (you, 5 minutes).
+2. The README, with screenshots and the recursion-to-music mapping. I can write it.
+3. Deploy the frontend to GitHub Pages. I'll give you the commands.
+4. A 2-minute screen recording, if they require one.
+5. Export the logs, then submit.
+
+**Commit now:**
+
+```bash
+cd ~/Documents/DevHub
+git add . && git commit -m "perf: 4x faster rendering; v1: sign-up signs you in directly (verification off) [log 001#21]" && git push
+```
+
+Want me to write the README and set up the GitHub Pages deploy next? This is logged as prompt 21.
+
+### Actions taken by the agent
+
+- Measured FPS in headless Chrome at 1280x780 with a full tree (5 fps baseline), then isolated costs by disabling layers (backdrop-filter was the largest).
+- `visual/renderer.js`: canopy and flower sprites cached per season, double-stroke glow instead of shadowBlur, DPR cap 1.5. `pages/GrovePage.jsx`: UI refresh 200 ms. `styles/grove.css`: aurora without CSS blur filter, no holo/grid animation, lighter blur, no live blur on panels and transport. Result: 21 fps (4x).
+- Backend: `AuthService.register` sets accounts verified and skips the email; login also marks older accounts verified; `AuthController` register message; test updated to expect 201 for a new user. Syntax-checked all Java files.
+- Frontend: `pages/AuthPage.jsx` signs in automatically after registering.
+- Copied 4 frontend files to the Mac; md5 checksums verified identical.
+
+### Result
+
+- Not committed yet.

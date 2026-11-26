@@ -81,7 +81,7 @@ export default function GrovePage() {
       const now = started ? engine.getTime() : -1;
       const snap = started ? snapshot(c, t, now) : null;
       r.frame(now, { started, stack: snap?.stack || [], progress: started ? Math.min(1, now / c.duration) : 0 });
-      if (ts - lastUi > 100) {
+      if (ts - lastUi > 200) {
         lastUi = ts;
         setLive(snap ? { ...snap, now, note: lastNoteAt(c, now) } : null);
         if (statusRef.current === 'playing') setSpectrum(engine.getSpectrum());

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private static final String CHECK_INBOX = "If this email can be used, we've sent a verification link. It works once and expires in 24 hours.";
+    private static final String REGISTERED = "If this email is new, your account is ready: sign in with it now.";
 
     private final AuthService auth;
 
@@ -30,7 +31,7 @@ public class AuthController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public MessageResponse register(@Valid @RequestBody RegisterRequest req) {
         auth.register(req);
-        return new MessageResponse(CHECK_INBOX);
+        return new MessageResponse(REGISTERED);
     }
 
     @PostMapping("/api/auth/login")

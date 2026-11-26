@@ -292,3 +292,22 @@ button:active:not(:disabled) { transform: scale(0.94); }
   .key { height: 76px; }
   .piano-head .sub { display: none; }
 }
+
+/* ---- Performance: compositor-only motion ---- */
+/* No CSS blur filter on the aurora: soft radial gradients moved with transform only (GPU, no repaint). */
+.aurora span { filter: none; mix-blend-mode: normal; opacity: 0.42; will-change: transform; }
+.aurora .a1 { background: radial-gradient(closest-side, rgba(94, 234, 212, 0.55), transparent); }
+.aurora .a2 { background: radial-gradient(closest-side, rgba(244, 114, 182, 0.5), transparent); }
+.aurora .a3 { background: radial-gradient(closest-side, rgba(139, 92, 246, 0.6), transparent); }
+/* Static shimmer edge and grid: animating them repainted every panel on every frame. */
+.holo::before { animation: none; }
+.grid-floor { animation: none; }
+/* Lighter frosted glass: cheaper to re-blur while the background moves. */
+.glass { backdrop-filter: blur(12px) saturate(140%); -webkit-backdrop-filter: blur(12px) saturate(140%); }
+/* The big panels and the transport sit over moving content: tinted glass without a live blur
+   (re-blurring them every frame halved the frame rate). Small/static surfaces keep the real blur. */
+.panel.glass, .transport.glass, .season-bar.glass, .tipbar.glass {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  background: linear-gradient(160deg, rgba(92, 80, 200, 0.5), rgba(46, 38, 132, 0.42) 60%, rgba(70, 58, 170, 0.48));
+}
+@media (max-width: 1100px) { .controls.glass, .recursion.glass, .now.glass { background: linear-gradient(180deg, rgba(56, 46, 150, 0.95), rgba(30, 26, 92, 0.97)); } }

@@ -64,9 +64,11 @@ public class AuthService {
         u.setDisplayName(req.displayName().strip());
         u.setPasswordHash(encoder.encode(req.password()));
         u.setRole(Role.USER);
+        // v1: email verification is switched off, so new accounts can sign in and save right away.
+        // The verify / resend endpoints stay in place for v2.
+        u.setEmailVerified(true);
         u.setCreatedAt(Instant.now());
         users.save(u);
-        issueVerification(u);
     }
 
     @Transactional(noRollbackFor = ResponseStatusException.class)
@@ -90,6 +92,7 @@ public class AuthService {
         }
         u.setFailedAttempts(0);
         u.setLockedUntil(null);
+        u.setEmailVerified(true); // v1: accounts created before verification was switched off
         return new LoginResponse(jwt.issue(u), UserResponse.from(u));
     }
 
