@@ -1,9 +1,10 @@
 import * as Tone from 'tone';
 import { SEASONS } from '../music/seasons';
+import { GUST_START, GUST_EVERY } from '../music/compose';
 import { encodeWav } from './wav';
 
 const PANS = [-0.6, 0, 0.6];
-const BASE = { drone: -12, wind: -18, branches: -4, chimes: -8, rain: -22, ocean: -16, bowls: -12, keys: -4 };
+const BASE = { drone: -12, wind: -18, branches: -4, chimes: -8, rain: -22, ocean: -16, bowls: -12, keys: -4, pulse: -9 };
 const KEY_DUR = { pad: 2.5, flute: 0.9, bowl: 4 };
 
 /** Calm instruments for the play-along keyboard. */
@@ -45,6 +46,7 @@ function buildGraph(season) {
     ocean: keep(new Tone.Volume(BASE.ocean)).connect(master),
     bowls: keep(new Tone.Volume(BASE.bowls)).connect(reverb),
     keys: keep(new Tone.Volume(BASE.keys)),
+    pulse: keep(new Tone.Volume(BASE.pulse)).connect(reverb),
   };
   // The play-along keys bypass the master fader, so they still sound while the tree is paused.
   const keysVerb = keep(new Tone.Freeverb({ roomSize: 0.86, dampening: 3200, wet: 0.35 }));
@@ -63,7 +65,7 @@ function buildGraph(season) {
 
   // Drone pad, always on, slowly breathing filter.
   const drone = keep(new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: 'fatsawtooth', count: 3, spread: 20 },
+    oscillator: { type: 'fattriangle', count: 2, spread: 12 },
     envelope: { attack: 3, decay: 1, sustain: 0.8, release: 6 },
   }));
   drone.maxPolyphony = 8;
@@ -73,7 +75,8 @@ function buildGraph(season) {
 
   // Wind: filtered pink noise.
   const noise = keep(new Tone.Noise('pink'));
-  const windFilter = keep(new Tone.AutoFilter({ frequency: 0.07, baseFrequency: 250, octaves: 3, filter: { type: 'bandpass', Q: 0.8 } })).connect(layers.wind);
+  const gustGain = keep(new Tone.Gain(1)).connect(layers.wind);
+  const windFilter = keep(new Tone.AutoFilter({ frequency: 0.07, baseFrequency: 250, octaves: 3, filter: { type: 'bandpass', Q: 0.8 } })).connect(gustGain);
   noise.connect(windFilter);
 
   // Each melodic instrument exists 3 times: left, centre, right.
@@ -85,9 +88,10 @@ function buildGraph(season) {
     return s;
   });
   const inst = {
-    pad: panned(() => new Tone.PolySynth(Tone.AMSynth, {
-      harmonicity: 1.5, oscillator: { type: 'triangle' }, envelope: { attack: 0.6, decay: 0.8, sustain: 0.5, release: 3.5 },
+    pad: panned(() => new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' }, envelope: { attack: 0.6, decay: 0.8, sustain: 0.5, release: 3.5 },
     }), layers.branches),
+    arp: panned(() => KEY_INSTRUMENTS[1][2](), layers.pulse),
     pluck: panned(() => new Tone.PolySynth(Tone.FMSynth, {
       harmonicity: S.pluckHarm, modulationIndex: 2.5, oscillator: { type: 'sine' },
       envelope: { attack: 0.004, decay: 0.9, sustain: 0, release: 1.2 },
@@ -103,7 +107,7 @@ function buildGraph(season) {
   const keyInst = {};
 
   return {
-    season, inst, drone, layers, master, fft, limiter, ready: reverb.ready,
+    season, inst, drone, layers, gustGain, master, fft, limiter, ready: reverb.ready,
     startAmbient(time) {
       if (noise.state !== 'started') noise.start(time);
       if (windFilter.state !== 'started') windFilter.start(time);
@@ -113,7 +117,7 @@ function buildGraph(season) {
       if (rainShape.state !== 'started') rainShape.start(time);
     },
     setVolumes(vol, wind, ramp = 0.2) {
-      const target = { drone: vol.drone, wind: vol.wind * wind, branches: vol.branches, chimes: vol.chimes, rain: vol.rain ?? 0, ocean: vol.ocean ?? 0, bowls: vol.bowls ?? 0.35, keys: vol.keys ?? 0.8 };
+      const target = { drone: vol.drone, wind: vol.wind * wind, branches: vol.branches, chimes: vol.chimes, rain: vol.rain ?? 0, ocean: vol.ocean ?? 0, bowls: vol.bowls ?? 0.35, keys: vol.keys ?? 0.8, pulse: vol.pulse ?? 0.55 };
       for (const k of Object.keys(layers)) {
         if (ramp) layers[k].volume.rampTo(db(target[k], BASE[k]), ramp);
         else layers[k].volume.value = db(target[k], BASE[k]);
@@ -132,6 +136,13 @@ function scheduleScore(g, comp, transport) {
     const synth = g.inst[n.inst][panSlot(n.pan)];
     const f = freq(n.midi);
     transport.schedule((time) => synth.triggerAttackRelease(f, n.dur, time, n.vel), n.t);
+  }
+  for (let t = GUST_START; t < comp.duration; t += GUST_EVERY) {
+    transport.schedule((time) => {
+      g.gustGain.gain.cancelScheduledValues(time);
+      g.gustGain.gain.setTargetAtTime(2.6, time, 0.7);
+      g.gustGain.gain.setTargetAtTime(1, time + 2.2, 1.6);
+    }, t);
   }
   for (const c of comp.chords) {
     const fs = c.notes.map(freq);

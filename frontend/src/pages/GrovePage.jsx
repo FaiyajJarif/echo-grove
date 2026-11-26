@@ -19,7 +19,7 @@ import { getUser, isOnline } from '../api/client';
 import SaveDialog from '../ui/SaveDialog';
 import PianoDrawer from '../ui/PianoDrawer';
 
-const VOLUMES = { drone: 0.6, wind: 0.5, branches: 0.8, chimes: 0.6, bowls: 0.4, rain: 0, ocean: 0, keys: 0.8 };
+const VOLUMES = { pulse: 0.55, drone: 0.5, wind: 0.4, branches: 0.8, chimes: 0.6, bowls: 0.4, rain: 0, ocean: 0, keys: 0.8 };
 // Infinite Garden: the next tree is a small, deterministic variation of the last one.
 const mutate = (p) => clampParams({ ...p, seed: (p.seed * 9301 + 49297) % 233280, spread: p.spread + ((p.seed % 7) - 3), asymmetry: p.asymmetry + ((p.seed % 5) - 2) * 0.05 });
 const TIPS = [

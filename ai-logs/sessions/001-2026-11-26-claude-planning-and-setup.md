@@ -1282,3 +1282,95 @@ This is logged as prompt 19.
 ### Result
 
 - Not committed yet.
+
+---
+
+## Prompt 20 (10:31 GMT+6)
+
+### Prompt (verbatim)
+
+Attachment: `echo-grove-spring-48213_1.wav` (a WAV exported from the app)
+
+```text
+there is a background noice in the recording 
+this should be a calm tunic beat not some random 
+zzzzzz sound 
+make it calm
+when the tree is growing give it variations 
+and also tell me accoridng to the problem set and evaluation how much we have done!
+also cant you make the middle tree likea a real tree 
+with petals 
+so it looks realistic and good to see 
+and peaceful 
+with soketime iwnd blowing
+```
+
+### Agent response (verbatim)
+
+All four are done and on your Mac. Reload, then download a fresh WAV to hear the difference.
+
+**The "zzzz" was a sub-bass growl, now gone.** I measured your file:
+- 35% of the energy in the first seconds sat below 110 Hz, peaking at 65 Hz. That was the trunk note at C2 on a modulated synth, plus a buzzy detuned-sawtooth drone.
+- **Fixed:**
+  - Every note now starts an octave higher (the trunk is C3), and nothing goes above C6, so the top end stays soft too.
+  - The trunk plays a soft triangle tone, and the drone uses gentle triangle waves instead of sawtooth.
+  - In a new export, the energy below 110 Hz is **0%**, and the peaks are clean chord tones at 131 Hz (C3) and 328 Hz (E4).
+
+**A calm tonic beat with variations as the tree grows:**
+- A new **Pulse** layer: a soft felt-piano arpeggio of the current chord, one note per beat at 60 BPM, with its own fader.
+- **The pattern changes every generation:** up, down, rolling, and so on, across 7 patterns.
+  - From generation 3, a gentle off-beat note appears.
+  - From generation 5, those notes rise an octave.
+  - The ending keeps only the downbeat, so it settles.
+- Everything stays deterministic, so the same seed still gives the same song.
+
+**A real-looking tree:**
+- Curved, tapering bark branches in warm brown, tinted by the season.
+- A soft canopy glow around the outer branches.
+- Each leaf opens into three five-petal blossoms when its chime rings.
+- Petals drift down, catch the wind and settle on a small grassy mound.
+- **Wind gusts:** every 21 seconds a breeze passes. The tree leans and sways more, more petals fall, the wind sound swells, and the ring says "a breeze passes…". The gust in the sound and the gust in the picture follow the same timing, so they stay in sync.
+
+**Where we stand against the brief and rubric** (my honest estimate; only the judges can score it):
+
+| Rubric criterion | Weight | Readiness | What's left |
+| --- | --- | --- | --- |
+| Relaxation and UX | 35% | ~80% | Your listening test on headphones; a phone and Safari check |
+| Musical quality | 25% | ~70% | A listening and balance pass with you (only you can hear it) |
+| Creative use of recursion | 15% | ~90% | Nothing major. Trace mode, the live stack, code view, subtree playback and the maths are all in |
+| Visual design | 10% | ~85% | Mobile polish |
+| Interaction and usability | 10% | ~85% | A final pass on the first-time hints |
+| Technical execution | 5% | ~75% | Deployment (tests, security and Postgres are done) |
+
+- **The 6 required deliverables:**
+  - Deliverables 1 to 5 are done (algorithm, visualization, procedural music, controls, audio export).
+  - Number 6, a polished and accessible experience, is mostly there and needs a final check.
+- **Submission items still missing:**
+  - The root README (concept, mapping table, screenshots, how to run).
+  - A live demo link.
+  - A demo video, if they require one.
+  - A sample WAV in the repo.
+- **Overall:** features are about 85% done, but submission readiness is about 60%. The time is best spent on those missing items, not on new features.
+
+**Commit:**
+
+```bash
+cd ~/Documents/DevHub
+git add . && git commit -m "fix(audio): remove low buzz; feat: tonic pulse with generation variations, wind gusts, realistic tree with blossoms [log 001#20]" && git push
+```
+
+**Suggested next:** listen for 2 minutes and tell me anything that still bothers you. Then I'll write the README and get the frontend live on GitHub Pages. This is logged as prompt 20.
+
+### Actions taken by the agent
+
+- Analysed the uploaded WAV with numpy (band energy and FFT peaks): 35% of energy below 110 Hz at 1 s, peaks at 65/120 Hz.
+- `music/compose.js`: notes one octave higher (trunk C3), cap at C6 (chimes at G6); new tonic-pulse arpeggio (7 patterns by generation, off-beats from gen 3, octave lift from gen 5, sparse coda); shared `gustAt()` timing.
+- `audio/engine.js`: drone fattriangle instead of fatsawtooth; trunk pad plain triangle Synth instead of AMSynth; new `arp` instrument on a `pulse` layer; wind gust gain envelopes scheduled every 21 s (live and offline).
+- `visual/renderer.js`: rewritten drawing: curved tapering bark branches, canopy glow, five-petal blossoms, falling petals that settle, grassy mound, gust lean and petal flurries, breeze label.
+- `ui/NowPlaying.jsx`: Pulse fader; `pages/GrovePage.jsx`: default volumes.
+- Re-exported a WAV in headless Chrome and measured: 0% below 110 Hz, peaks at 131 and 328 Hz. Screenshot saved as `docs/design/grove-tree.png`.
+- Copied 5 source files + screenshot to the Mac; md5 checksums verified identical.
+
+### Result
+
+- Not committed yet.

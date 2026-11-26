@@ -4,12 +4,26 @@ import { SEASONS } from './seasons.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+/** Wind gusts: every 21 s from 9 s; rises for 2 s, fades over 5 s. Shared by the sound and the picture. */
+export const GUST_START = 9;
+export const GUST_EVERY = 21;
+const ease = (x) => x * x * (3 - 2 * x);
+export function gustAt(t) {
+  if (t < GUST_START) return 0;
+  const x = (t - GUST_START) % GUST_EVERY;
+  return x < 2 ? ease(x / 2) : x < 7 ? ease(1 - (x - 2) / 5) : 0;
+}
+
+// One arpeggio pattern per generation (indices into the chord tones), so the pulse evolves as the tree grows.
+const PATTERNS = [[0, 1, 2, 1], [0, 2, 1, 3], [0, 1, 2, 3], [3, 2, 1, 0], [0, 2, 3, 1], [1, 0, 2, 3], [0, 3, 1, 2]];
+
 /** Depth picks the octave, the scale degree picks the note: every pitch is in the season's scale. */
 export function midiFor(node, S) {
   const n = S.scale.length;
   const k = ((node.degree % n) + n) % n;
-  let m = 12 * (3 + Math.floor(node.depth * 0.6)) + S.rootOffset + S.scale[k];
-  while (m > 96) m -= 12;
+  // Trunk starts at C3 (not C2): low notes on soft synths turn into a buzz.
+  let m = 12 * (4 + Math.floor(node.depth * 0.5)) + S.rootOffset + S.scale[k];
+  while (m > 84) m -= 12; // keep the top soft: nothing above C6
   while (m < 36) m += 12;
   return m;
 }
@@ -74,12 +88,29 @@ export function compose(tree, p, seasonKey, mode) {
       const c = clusters.get(key) || 0;
       if (c < 5) {
         clusters.set(key, c + 1);
-        notes.push({ t: tl[i], midi: Math.min(100, midi + 12), dur: 1.4, vel: 0.45 * (0.85 + rng() * 0.3), pan, inst: 'bell', node: i });
+        notes.push({ t: tl[i], midi: Math.min(91, midi + 12), dur: 1.4, vel: 0.45 * (0.85 + rng() * 0.3), pan, inst: 'bell', node: i });
       }
     }
   });
   for (let tb = 2, k = 0; tb < duration - 6; tb += 16 * spb, k++) {
     notes.push({ t: tb, midi: 60 + S.rootOffset + (k % 3 === 2 ? 7 : 0), dur: 6, vel: 0.5, pan: k % 2 ? 0.4 : -0.4, inst: 'bowl', node: -1 });
+  }
+  // Tonic pulse: a soft felt-piano arpeggio of the current chord, one note per beat.
+  // From generation 3 a gentle off-beat note appears, from generation 5 it moves up an octave; the coda keeps only the downbeat.
+  for (let b = 0; b * spb < duration - 4; b++) {
+    const tb = b * spb;
+    const chord = [...chords].reverse().find((c) => c.t <= tb) || chords[0];
+    const tones = [...chord.notes].sort((x, y) => x - y).map((m) => m + 12);
+    tones.push(tones[0] + 12);
+    const gen = mode === 'bloom' ? Math.min(D, Math.floor(tb / win)) : Math.floor(b / 8);
+    const coda = tb > duration - 16 * spb - 2;
+    const beat = b % 4;
+    if (coda && beat !== 0) continue;
+    const pat = PATTERNS[gen % PATTERNS.length];
+    notes.push({ t: tb + (beat ? (rng() - 0.5) * 0.02 : 0), midi: tones[pat[beat]], dur: 1.6, vel: (beat === 0 ? 0.42 : 0.28) * (0.9 + rng() * 0.2) * (coda ? 0.7 : 1), pan: [-0.3, 0.1, 0.3, -0.1][beat], inst: 'arp', node: -1 });
+    if (gen >= 3 && beat === 1 && !coda && rng() > 0.4) {
+      notes.push({ t: tb + spb / 2, midi: tones[(pat[beat] + 1) % 4] + (gen >= 5 ? 12 : 0), dur: 1, vel: 0.18, pan: 0.2, inst: 'arp', node: -1 });
+    }
   }
   notes.sort((a, b) => a.t - b.t);
 

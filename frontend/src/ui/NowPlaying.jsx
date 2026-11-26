@@ -2,8 +2,8 @@ import { Icon } from './Icons';
 import Fader from './Fader';
 import { noteName } from '../music/seasons';
 
-const INST = { pad: 'Warm pad · trunk', pluck: 'Kalimba · branch', bell: 'Glass bell · leaf', bowl: 'Singing bowl' };
-const LAYERS = [['drone', 'Drone'], ['wind', 'Wind'], ['branches', 'Branch'], ['chimes', 'Chime'], ['bowls', 'Bowl'], ['rain', 'Rain'], ['ocean', 'Ocean']];
+const INST = { pad: 'Warm pad · trunk', pluck: 'Kalimba · branch', bell: 'Glass bell · leaf', bowl: 'Singing bowl', arp: 'Felt piano · pulse' };
+const LAYERS = [['pulse', 'Pulse'], ['drone', 'Drone'], ['wind', 'Wind'], ['branches', 'Branch'], ['chimes', 'Chime'], ['bowls', 'Bowl'], ['rain', 'Rain'], ['ocean', 'Ocean']];
 
 export default function NowPlaying({ live, spectrum, volumes, setVolume, scaleName, onRecord, recording, onClose, className = '' }) {
   const note = live?.note;
