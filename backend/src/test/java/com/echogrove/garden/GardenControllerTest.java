@@ -99,5 +99,8 @@ class GardenControllerTest {
         mvc.perform(get("/api/admin/stats").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.users").isNumber());
+        mvc.perform(get("/api/admin/users").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].locked").isBoolean());
     }
 }

@@ -58,6 +58,9 @@ export const admin = {
   setHidden: (code, hidden) => request(`/api/admin/gardens/${encodeURIComponent(code)}`, { method: 'PATCH', body: { hidden } }),
   users: () => request('/api/admin/users?limit=50'),
   setEnabled: (id, enabled) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: { enabled } }),
+  unlock: (id) => request(`/api/admin/users/${id}/unlock`, { method: 'POST' }),
+  deleteUser: (id) => request(`/api/admin/users/${id}`, { method: 'DELETE' }),
+  deleteGarden: (code) => request(`/api/gardens/${encodeURIComponent(code)}`, { method: 'DELETE' }),
 };
 
 export const auth = {

@@ -1523,3 +1523,66 @@ This is logged as prompt 22.
 ### Result
 
 - Not committed yet.
+
+---
+
+## Prompt 23 (11:08 GMT+6)
+
+### Prompt (verbatim)
+
+```text
+are the private files or that are related to pass word properly maintained in github 
+also
+give admin some pages to control user and things 
+simplistic and minimal 
+and tell the github deploy flow again
+```
+
+### Agent response (verbatim)
+
+**1. Secrets: yes, they're protected.** I checked the repo and its full history:
+- Only `backend/.env.example` and `frontend/.env.example` are tracked, and they contain placeholders only.
+- Your real `backend/.env` (admin password, JWT secret, database password) and `frontend/.env.development` are git-ignored and have **never** been committed.
+- No password or secret values appear in any tracked file. The only ones are the fake credentials used by the automated tests.
+- Passwords are stored in the database only as BCrypt hashes, never as plain text.
+- `.DS_Store` files and the old H2 database folder aren't tracked either.
+
+**2. Admin console (simple and minimal):** sign in as the admin; an **Admin** link appears in the top bar. It has three tabs:
+- **Overview:** accounts, gardens, in gallery, hidden, locked out and disabled, plus the 5 newest accounts.
+- **Users:** search by name or email, with a status pill (Active, Locked out or Disabled) and these actions:
+  - **Unlock:** clears a lockout after 5 wrong passwords.
+  - **Enable / Disable:** switches whether the account can sign in.
+  - **Delete:** removes the account and all its gardens, after asking you to confirm.
+- **Gardens:** search by name, code or owner; filter by All, In gallery, Private or Hidden; and **Open, Hide/Unhide, Delete**.
+- Admin accounts can't be disabled or deleted from the console. Every action shows a confirmation toast and refreshes the lists.
+
+The new backend endpoints are `POST /api/admin/users/{id}/unlock` and `DELETE /api/admin/users/{id}`. User lists now include a `locked` flag, and a test covers it. I tested the page in headless Chrome with sample data: no errors.
+
+**3. GitHub deploy flow:**
+1. **Commit and push** (this includes the README, the sample WAV and the deploy workflow from last time):
+   ```bash
+   cd ~/Documents/DevHub
+   git add .
+   git commit -m "feat(admin): users, gardens and overview tabs; docs: README, sample, Pages deploy [log 001#22-23]"
+   git push
+   ```
+2. **One-time setting:** open https://github.com/faiyajjarif/echo-grove, then **Settings → Pages**. Under **Build and deployment → Source**, choose **GitHub Actions**.
+3. **Watch it build:** open the **Actions** tab. You'll see a run called "Deploy frontend to GitHub Pages" with two steps, *build* (installs and builds `frontend/`) and *deploy* (publishes `frontend/dist`).
+   - If that run failed because Pages wasn't switched on yet, open the workflow and click **Run workflow**.
+4. **Live:** after about 2 minutes, the green check means the site is at **https://faiyajjarif.github.io/echo-grove/**.
+5. **From now on,** every `git push` to `main` redeploys automatically.
+
+The live site runs in guest mode, and everything musical works. Accounts and the admin console need the backend running locally with Docker. To use a hosted backend later, add a repository variable `VITE_API_URL` under Settings → Secrets and variables → Actions → Variables.
+
+This is logged as prompt 23.
+
+### Actions taken by the agent
+
+- Audited the repo on the Mac: tracked files, all history for `.env*`, `git check-ignore` for both real env files, and a grep for password or secret values in tracked files. All clean.
+- Backend: `UserResponse.locked`; `GardenRepository.countByOwnerId`/`deleteByOwnerId`; `EmailTokenRepository.deleteByUserId`; `AdminController` unlock and delete-user endpoints (admins protected); test asserts `locked`. Syntax-checked the Java files.
+- Frontend: admin API calls in `api/client.js`; `pages/AdminPage.jsx` rewritten (Overview, Users and Gardens tabs, search, filter, pills, confirmations); admin styles in `styles/theme.css`. Rendered in headless Chrome with a mocked API: no errors.
+- Copied 3 frontend files to the Mac; md5 checksums verified identical.
+
+### Result
+
+- Not committed yet.

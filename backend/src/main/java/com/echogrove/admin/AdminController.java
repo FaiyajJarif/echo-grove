@@ -3,6 +3,7 @@ package com.echogrove.admin;
 import com.echogrove.garden.GardenRepository;
 import com.echogrove.garden.GardenResponse;
 import com.echogrove.garden.GardenService;
+import com.echogrove.auth.EmailTokenRepository;
 import com.echogrove.security.CurrentUser;
 import com.echogrove.user.Role;
 import com.echogrove.user.User;
@@ -14,7 +15,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +38,7 @@ public class AdminController {
     private final GardenService gardens;
     private final GardenRepository gardenRepo;
     private final UserRepository users;
+    private final EmailTokenRepository tokens;
 
     public record Stats(long users, long verifiedUsers, long gardens, long publishedGardens, long hiddenGardens) {
     }
@@ -73,5 +78,29 @@ public class AdminController {
         }
         u.setEnabled(Boolean.TRUE.equals(req.enabled()));
         return UserResponse.from(u);
+    }
+
+    /** Clears a lockout after too many wrong passwords. */
+    @PostMapping("/users/{id}/unlock")
+    @Transactional
+    public UserResponse unlock(@PathVariable Long id) {
+        User u = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        u.setFailedAttempts(0);
+        u.setLockedUntil(null);
+        return UserResponse.from(u);
+    }
+
+    /** Deletes an account and all of its gardens. Admin accounts can't be deleted here. */
+    @DeleteMapping("/users/{id}")
+    @Transactional
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @AuthenticationPrincipal CurrentUser me) {
+        User u = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (u.getId().equals(me.id()) || u.getRole() == Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Admin accounts can't be deleted here.");
+        }
+        gardenRepo.deleteByOwnerId(id);
+        tokens.deleteByUserId(id);
+        users.delete(u);
+        return ResponseEntity.noContent().build();
     }
 }

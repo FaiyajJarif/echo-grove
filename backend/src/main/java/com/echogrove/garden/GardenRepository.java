@@ -17,4 +17,8 @@ public interface GardenRepository extends JpaRepository<Garden, String> {
     long countByPublishedTrue();
 
     long countByHiddenTrue();
+
+    long countByOwnerId(Long ownerId);
+
+    void deleteByOwnerId(Long ownerId);
 }
