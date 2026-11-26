@@ -17,8 +17,11 @@ import useKeyboard from '../hooks/useKeyboard';
 import useReducedMotion from '../hooks/useReducedMotion';
 import { getUser, isOnline } from '../api/client';
 import SaveDialog from '../ui/SaveDialog';
+import PianoDrawer from '../ui/PianoDrawer';
 
-const VOLUMES = { drone: 0.6, wind: 0.5, branches: 0.8, chimes: 0.6 };
+const VOLUMES = { drone: 0.6, wind: 0.5, branches: 0.8, chimes: 0.6, bowls: 0.4, rain: 0, ocean: 0, keys: 0.8 };
+// Infinite Garden: the next tree is a small, deterministic variation of the last one.
+const mutate = (p) => clampParams({ ...p, seed: (p.seed * 9301 + 49297) % 233280, spread: p.spread + ((p.seed % 7) - 3), asymmetry: p.asymmetry + ((p.seed % 5) - 2) * 0.05 });
 const TIPS = [
   'Tap any branch to hear its own smaller song',
   'Switch to Trace to hear the recursion dive and return',
@@ -44,6 +47,10 @@ export default function GrovePage() {
   const [recording, setRecording] = useState(false);
   const [tip, setTip] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [infinite, setInfinite] = useState(false);
+  const [piano, setPiano] = useState(false);
+  const infiniteRef = useRef(false);
+  infiniteRef.current = infinite;
   const reduced = useReducedMotion();
   const toast = useToast();
   const navigate = useNavigate();
@@ -82,7 +89,9 @@ export default function GrovePage() {
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    engine.setOnEnd(() => setStatus('ended'));
+    engine.setOnEnd(() => {
+      if (infiniteRef.current) { setParams((p) => mutate(p)); toast('Infinite garden: a new seed is planted'); } else setStatus('ended');
+    });
     return () => { cancelAnimationFrame(raf); ro.disconnect(); engine.stop(); };
   }, []);
 
@@ -174,6 +183,28 @@ export default function GrovePage() {
     return () => { clearTimeout(id); clearTimeout(inner); };
   }, [sleep]);
 
+  const toggleInfinite = () => { const n = !infinite; setInfinite(n); toast(n ? 'Infinite garden on: a new tree grows after each one' : 'Infinite garden off'); };
+  const exportPng = () => {
+    const c = canvasRef.current;
+    const out = document.createElement('canvas');
+    out.width = c.width; out.height = c.height;
+    const x = out.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, out.height);
+    g.addColorStop(0, '#161b5e'); g.addColorStop(0.55, '#2a1f78'); g.addColorStop(1, '#44247f');
+    x.fillStyle = g; x.fillRect(0, 0, out.width, out.height); x.drawImage(c, 0, 0);
+    out.toBlob((b) => { saveBlob(b, `echo-grove-${season}-${params.seed}.png`); toast('Tree saved as PNG'); });
+  };
+
+  // The chord the drone is holding right now, for the harmony guide.
+  const nowT = live?.now ?? 0;
+  const chord = [...comp.chords].reverse().find((c) => c.t <= nowT) || comp.chords[0];
+  const chordPcs = chord.notes.map((m) => m % 12);
+  const playKey = async (inst, midi) => {
+    await engine.ensureStarted();
+    await engine.playKey(inst, midi, season, volumes, params.wind);
+    rendRef.current?.burst(3);
+  };
+
   const onSave = () => {
     const user = getUser();
     if (!isOnline()) { toast('Saving goes live when the backend is connected. Share links already work.'); return; }
@@ -193,7 +224,9 @@ export default function GrovePage() {
   };
 
   const actions = { togglePlay, regrow: startFresh, toggleMode, download, share, cycleSleep, toggleZen: () => setZen((z) => !z) };
-  useKeyboard({ ' ': togglePlay, r: startFresh, t: toggleMode, z: actions.toggleZen, d: download, Escape: () => { setZen(false); setSheet(null); } });
+  const esc = () => { setZen(false); setSheet(null); setPiano(false); };
+  // While the keyboard is open, letter keys play notes instead of shortcuts.
+  useKeyboard(piano ? { ' ': togglePlay, Escape: esc } : { ' ': togglePlay, r: startFresh, t: toggleMode, z: actions.toggleZen, d: download, i: toggleInfinite, p: exportPng, Escape: esc });
 
   const announce = status === 'idle' ? 'Press Plant a seed to begin.' : status === 'ended' ? 'The tree is complete.' : `Growing generation ${live?.generation ?? 1} of ${comp.depth + 1}.`;
   const close = () => setSheet(null);
@@ -209,6 +242,16 @@ export default function GrovePage() {
             {SEASON_KEYS.map((k) => (
               <button key={k} role="radio" aria-checked={season === k} className={`chip ${season === k ? 'on' : ''}`} onClick={() => setSeason(k)}>{SEASONS[k].name}</button>
             ))}
+          </div>
+          <div className="stage-tools">
+            <div className="segmented small" role="radiogroup" aria-label="Listening mode">
+              {[['bloom', 'Bloom'], ['trace', 'Trace']].map(([k, l]) => (
+                <button key={k} role="radio" aria-checked={mode === k} className={mode === k ? 'on' : ''} onClick={() => setMode(k)}>{l}</button>
+              ))}
+            </div>
+            <button className={`chip ${infinite ? 'on' : ''}`} aria-pressed={infinite} onClick={toggleInfinite} title="Keep growing new trees forever (I)">∞ Infinite</button>
+            <button className="chip" onClick={exportPng} title="Save the tree as an image (P)"><Icon.download /> PNG</button>
+            <button className={`chip ${piano ? 'on' : ''}`} aria-pressed={piano} onClick={() => setPiano((o) => !o)}><Icon.piano /> Play along</button>
           </div>
           <p className="tipbar glass"><span className="dot" aria-hidden="true" />{status === 'idle' ? 'Press Plant a seed: sound starts with one click' : TIPS[tip]}</p>
         </div>
@@ -237,6 +280,7 @@ export default function GrovePage() {
       </nav>
       {sheet && <div className="sheet-backdrop" onClick={close} aria-hidden="true" />}
       <div className="sr-only" aria-live="polite">{announce}</div>
+      <PianoDrawer open={piano} onClose={() => setPiano(false)} season={season} chordPcs={chordPcs} onPlay={playKey} />
       {saving && <SaveDialog garden={{ ...params, season, mode }} onClose={() => setSaving(false)} toast={toast} />}
     </div>
   );

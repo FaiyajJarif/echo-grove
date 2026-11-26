@@ -3,7 +3,19 @@ import { SEASONS } from '../music/seasons';
 import { encodeWav } from './wav';
 
 const PANS = [-0.6, 0, 0.6];
-const BASE = { drone: -12, wind: -18, branches: -4, chimes: -8 };
+const BASE = { drone: -12, wind: -18, branches: -4, chimes: -8, rain: -22, ocean: -16, bowls: -12, keys: -4 };
+const KEY_DUR = { pad: 2.5, flute: 0.9, bowl: 4 };
+
+/** Calm instruments for the play-along keyboard. */
+export const KEY_INSTRUMENTS = [
+  ['kalimba', 'Kalimba', () => new Tone.PolySynth(Tone.FMSynth, { harmonicity: 3, modulationIndex: 2, oscillator: { type: 'sine' }, envelope: { attack: 0.002, decay: 1.2, sustain: 0, release: 1.2 }, modulationEnvelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.2 } })],
+  ['piano', 'Felt piano', () => new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, envelope: { attack: 0.004, decay: 1.8, sustain: 0.08, release: 1.6 } })],
+  ['harp', 'Harp', () => new Tone.PolySynth(Tone.FMSynth, { harmonicity: 2, modulationIndex: 0.8, oscillator: { type: 'triangle' }, envelope: { attack: 0.003, decay: 2.2, sustain: 0, release: 2 }, modulationEnvelope: { attack: 0.002, decay: 0.4, sustain: 0, release: 0.3 } })],
+  ['bell', 'Glass bell', () => new Tone.PolySynth(Tone.FMSynth, { harmonicity: 3.01, modulationIndex: 6, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 2, sustain: 0, release: 2.5 }, modulationEnvelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.5 } })],
+  ['flute', 'Soft flute', () => new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' }, envelope: { attack: 0.12, decay: 0.3, sustain: 0.6, release: 1.2 } })],
+  ['bowl', 'Singing bowl', () => new Tone.PolySynth(Tone.FMSynth, { harmonicity: 1.4, modulationIndex: 1.2, oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 5, sustain: 0, release: 5 }, modulationEnvelope: { attack: 0.05, decay: 3, sustain: 0.2, release: 3 } })],
+  ['pad', 'Warm pad', () => new Tone.PolySynth(Tone.AMSynth, { harmonicity: 1.5, oscillator: { type: 'triangle' }, envelope: { attack: 0.8, decay: 1, sustain: 0.6, release: 3 } })],
+];
 const db = (v, base) => (v <= 0.001 ? -80 : base + 20 * Math.log10(v));
 const freq = (m) => Tone.Frequency(m, 'midi').toFrequency();
 const panSlot = (p) => (p < -0.25 ? 0 : p > 0.25 ? 2 : 1);
@@ -29,7 +41,25 @@ function buildGraph(season) {
     wind: keep(new Tone.Volume(BASE.wind)).connect(master),
     branches: keep(new Tone.Volume(BASE.branches)).connect(reverb),
     chimes: keep(new Tone.Volume(BASE.chimes)).connect(reverb),
+    rain: keep(new Tone.Volume(BASE.rain)).connect(master),
+    ocean: keep(new Tone.Volume(BASE.ocean)).connect(master),
+    bowls: keep(new Tone.Volume(BASE.bowls)).connect(reverb),
+    keys: keep(new Tone.Volume(BASE.keys)),
   };
+  // The play-along keys bypass the master fader, so they still sound while the tree is paused.
+  const keysVerb = keep(new Tone.Freeverb({ roomSize: 0.86, dampening: 3200, wet: 0.35 }));
+  layers.keys.chain(keysVerb, soft);
+
+  // Ocean: brown noise with a slow swell.
+  const ocean = keep(new Tone.Noise('brown'));
+  const oceanSwell = keep(new Tone.AutoFilter({ frequency: 0.08, baseFrequency: 160, octaves: 3, filter: { type: 'lowpass', Q: 0.3 } }));
+  ocean.chain(oceanSwell, layers.ocean);
+
+  // Rain: white noise shaped into soft hiss, with a slow swell.
+  const rain = keep(new Tone.Noise('white'));
+  const rainShape = keep(new Tone.AutoFilter({ frequency: 0.03, baseFrequency: 2200, octaves: 1.5, filter: { type: 'highpass', Q: 0.5 } }));
+  const rainSoft = keep(new Tone.Filter(7000, 'lowpass'));
+  rain.chain(rainShape, rainSoft, layers.rain);
 
   // Drone pad, always on, slowly breathing filter.
   const drone = keep(new Tone.PolySynth(Tone.Synth, {
@@ -68,20 +98,30 @@ function buildGraph(season) {
       envelope: { attack: 0.001, decay: 1.6, sustain: 0, release: 2.4 },
       modulationEnvelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.5 },
     }), layers.chimes),
+    bowl: panned(() => KEY_INSTRUMENTS[5][2](), layers.bowls),
   };
+  const keyInst = {};
 
   return {
     season, inst, drone, layers, master, fft, limiter, ready: reverb.ready,
     startAmbient(time) {
       if (noise.state !== 'started') noise.start(time);
       if (windFilter.state !== 'started') windFilter.start(time);
+      if (rain.state !== 'started') rain.start(time);
+      if (ocean.state !== 'started') ocean.start(time);
+      if (oceanSwell.state !== 'started') oceanSwell.start(time);
+      if (rainShape.state !== 'started') rainShape.start(time);
     },
     setVolumes(vol, wind, ramp = 0.2) {
-      const target = { drone: vol.drone, wind: vol.wind * wind, branches: vol.branches, chimes: vol.chimes };
+      const target = { drone: vol.drone, wind: vol.wind * wind, branches: vol.branches, chimes: vol.chimes, rain: vol.rain ?? 0, ocean: vol.ocean ?? 0, bowls: vol.bowls ?? 0.35, keys: vol.keys ?? 0.8 };
       for (const k of Object.keys(layers)) {
         if (ramp) layers[k].volume.rampTo(db(target[k], BASE[k]), ramp);
         else layers[k].volume.value = db(target[k], BASE[k]);
       }
+    },
+    key(name) {
+      if (!keyInst[name]) { const def = KEY_INSTRUMENTS.find(([k]) => k === name); keyInst[name] = keep(def[2]()).connect(layers.keys); keyInst[name].maxPolyphony = 8; }
+      return keyInst[name];
     },
     dispose() { all.forEach((n) => { try { n.dispose(); } catch { /* already gone */ } }); },
   };
@@ -154,6 +194,12 @@ export const getTime = () => Tone.getTransport().seconds;
 export const setVolumes = (vol, wind) => graph?.setVolumes(vol, wind);
 export const fadeOut = (sec) => graph?.master.volume.rampTo(-60, sec);
 export const getSpectrum = () => (graph ? Array.from(graph.fft.getValue()) : []);
+
+/** Plays one note on the play-along keyboard. */
+export async function playKey(name, midi, season, vol, wind) {
+  const g = await ensureGraph(season, vol, wind);
+  g.key(name).triggerAttackRelease(freq(midi), KEY_DUR[name] ?? 1.5, Tone.now() + 0.01, 0.7);
+}
 
 /** Plays one branch's subtree right now, slightly faster: "every branch is a smaller tree". */
 export async function preview(notes, season, vol, wind) {

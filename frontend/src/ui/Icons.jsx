@@ -20,5 +20,6 @@ export const Icon = {
   save: () => <svg {...P}><path d="M6 4h10l3 3v13H5V4zM8 4v5h7V4M8 20v-6h8v6" /></svg>,
   info: () => <svg {...P} width={16} height={16}><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5v.5" /></svg>,
   check: () => <svg {...P} width={14} height={14}><path d="M5 12.5l4.5 4.5L19 7" /></svg>,
+  piano: () => <svg {...P}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M8 5v9M12 5v9M16 5v9M7 14h2M11 14h2M15 14h2" /></svg>,
   eye: () => <svg {...P}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>,
 };

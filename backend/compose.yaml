@@ -1,0 +1,23 @@
+# PostgreSQL for local development. Started automatically by `mvn spring-boot:run`,
+# or by hand with `docker compose up -d` in this folder.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: echogrove
+      POSTGRES_USER: echogrove
+      # Set POSTGRES_PASSWORD in backend/.env (git-ignored). The fallback is for local use only.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
+    ports:
+      # Bound to this computer only, never to the network.
+      - "127.0.0.1:5444:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U echogrove -d echogrove"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

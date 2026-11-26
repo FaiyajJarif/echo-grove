@@ -1,12 +1,16 @@
 spring:
   application:
     name: echo-grove-backend
+  config:
+    # Local secrets (ADMIN_EMAIL, ADMIN_PASSWORD, JWT_SECRET, POSTGRES_PASSWORD) live in backend/.env, which git ignores.
+    import: optional:file:.env[.properties]
+  docker:
+    compose:
+      # Development: `mvn spring-boot:run` starts compose.yaml (Postgres) and connects to it automatically.
+      lifecycle-management: start-only
   datasource:
-    # Embedded file database for development; the data/ folder is git-ignored.
-    # For the live server set SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD to a hosted PostgreSQL or MySQL.
-    url: jdbc:h2:file:./data/echogrove
-    username: sa
-    password: ""
+    # Live server: set SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME and SPRING_DATASOURCE_PASSWORD
+    # to a hosted PostgreSQL database (Docker Compose support is not included in the packaged jar).
     hikari:
       maximum-pool-size: 10
   jpa:
@@ -22,7 +26,7 @@ spring:
   # Without them, verification links are printed to the server log (development).
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8085}
   forward-headers-strategy: native
   error:
     include-stacktrace: never

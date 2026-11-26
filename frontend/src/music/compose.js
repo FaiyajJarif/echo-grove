@@ -78,6 +78,9 @@ export function compose(tree, p, seasonKey, mode) {
       }
     }
   });
+  for (let tb = 2, k = 0; tb < duration - 6; tb += 16 * spb, k++) {
+    notes.push({ t: tb, midi: 60 + S.rootOffset + (k % 3 === 2 ? 7 : 0), dur: 6, vel: 0.5, pan: k % 2 ? 0.4 : -0.4, inst: 'bowl', node: -1 });
+  }
   notes.sort((a, b) => a.t - b.t);
 
   // When each call returns: after its whole subtree has finished.

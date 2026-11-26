@@ -181,5 +181,15 @@ export function createRenderer(canvas, { ring = true } = {}) {
     return best;
   }
 
-  return { resize, setScene, frame, hit };
+  /** A few petals fall from random leaves (play-along feedback). */
+  function burst(n = 5) {
+    if (!tree || reduced) return;
+    const leaves = tree.nodes.filter((x) => x.leaf);
+    for (let k = 0; k < n && petals.length < 160; k++) {
+      const i = leaves[Math.floor(Math.random() * leaves.length)].index;
+      petals.push({ x: X(pos[i * 4 + 2]), y: Y(pos[i * 4 + 3]), vx: (Math.random() - 0.5) * 20, vy: -10, life: 4, seed: i });
+    }
+  }
+
+  return { resize, setScene, frame, hit, burst };
 }

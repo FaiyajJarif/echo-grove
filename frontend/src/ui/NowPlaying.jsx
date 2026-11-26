@@ -1,8 +1,9 @@
 import { Icon } from './Icons';
+import Fader from './Fader';
 import { noteName } from '../music/seasons';
 
-const INST = { pad: 'Warm pad · trunk', pluck: 'Kalimba · branch', bell: 'Glass bell · leaf' };
-const LAYERS = [['drone', 'Drone'], ['wind', 'Wind'], ['branches', 'Branches'], ['chimes', 'Chimes']];
+const INST = { pad: 'Warm pad · trunk', pluck: 'Kalimba · branch', bell: 'Glass bell · leaf', bowl: 'Singing bowl' };
+const LAYERS = [['drone', 'Drone'], ['wind', 'Wind'], ['branches', 'Branch'], ['chimes', 'Chime'], ['bowls', 'Bowl'], ['rain', 'Rain'], ['ocean', 'Ocean']];
 
 export default function NowPlaying({ live, spectrum, volumes, setVolume, scaleName, onRecord, recording, onClose, className = '' }) {
   const note = live?.note;
@@ -20,9 +21,7 @@ export default function NowPlaying({ live, spectrum, volumes, setVolume, scaleNa
           <span className="big">{note ? noteName(note.midi) : '—'}</span>
           <div>
             <p>{note ? INST[note.inst] : 'Waiting for the first note'}</p>
-            <div className="pan" aria-label="Stereo position">
-              <span>L</span><i><b style={{ left: `${50 + (note?.pan ?? 0) * 50}%` }} /></i><span>R</span>
-            </div>
+            <div className="pan" aria-label="Stereo position"><span>L</span><i><b style={{ left: `${50 + (note?.pan ?? 0) * 50}%` }} /></i><span>R</span></div>
           </div>
         </div>
         <div className="spectrum" aria-hidden="true">
@@ -32,18 +31,10 @@ export default function NowPlaying({ live, spectrum, volumes, setVolume, scaleNa
             return <span key={i} style={{ height: `${h}%` }} />;
           })}
         </div>
-        <div className="mixer">
-          {LAYERS.map(([k, l]) => (
-            <label key={k} className="mini">
-              <span>{l}</span>
-              <input type="range" min="0" max="1" step="0.05" value={volumes[k]} style={{ '--fill': `${volumes[k] * 100}%` }}
-                aria-valuetext={`${l} volume ${Math.round(volumes[k] * 100)}%`} onChange={(e) => setVolume(k, Number(e.target.value))} />
-            </label>
-          ))}
+        <div className="mixer" role="group" aria-label="Mixer">
+          {LAYERS.map(([k, l]) => <Fader key={k} label={l} value={volumes[k] ?? 0} onChange={(v) => setVolume(k, v)} />)}
         </div>
-        <button className="btn-ghost small" onClick={onRecord} disabled={recording}>
-          <Icon.note /> {recording ? 'Recording…' : 'Record live (backup export)'}
-        </button>
+        <button className="link-btn" onClick={onRecord} disabled={recording}><Icon.note /> {recording ? 'Recording…' : 'Record live (backup export)'}</button>
       </div>
     </section>
   );

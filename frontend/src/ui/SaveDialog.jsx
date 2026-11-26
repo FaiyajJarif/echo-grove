@@ -12,7 +12,7 @@ export default function SaveDialog({ garden, onClose, toast }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    ref.current?.showModal();
+    if (ref.current && !ref.current.open) ref.current.showModal();
     const d = ref.current;
     const onCancel = (e) => { e.preventDefault(); onClose(); };
     d?.addEventListener('cancel', onCancel);

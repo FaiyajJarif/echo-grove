@@ -3,6 +3,7 @@ import { Route, Routes, Link, useLocation } from 'react-router-dom';
 import { api } from './api/client';
 import GardenCodePage from './pages/GardenCodePage';
 import ErrorBoundary from './ui/ErrorBoundary';
+import CursorFx from './ui/CursorFx';
 import TopBar from './ui/TopBar';
 import { ToastProvider } from './ui/Toast';
 import GrovePage from './pages/GrovePage';
@@ -27,7 +28,8 @@ export default function App() {
   useEffect(() => { api.health().catch(() => {}); }, []);
   return (
     <ToastProvider>
-      <div className="sky" aria-hidden="true"><div className="stars" /><div className="stars s2" /><div className="grid-floor" /></div>
+      <CursorFx />
+      <div className="sky" aria-hidden="true"><div className="aurora"><span className="a1" /><span className="a2" /><span className="a3" /></div><div className="stars" /><div className="stars s2" /><div className="grid-floor" /></div>
       <button className="skip" onClick={() => document.getElementById('main')?.focus()}>Skip to content</button>
       <div className={`app ${pathname === '/' ? 'on-grove' : ''}`}>
         <TopBar />

@@ -1,15 +1,20 @@
 # Echo Grove backend
 
-Spring Boot 3.4 API (Java 17). The music is generated in the browser; this service only stores and serves gardens.
+Spring Boot 3.4 API (Java 17) on PostgreSQL. The music is generated in the browser; this service handles accounts, saved gardens, the gallery and moderation.
 
-## Run
+## Run (PostgreSQL in Docker)
+
+Needs Docker Desktop running.
 
 ```bash
 cd backend
-mvn spring-boot:run        # or open the folder in IntelliJ and run EchoGroveApplication
+cp .env.example .env        # then edit: admin email/password, JWT secret, DB password
+mvn spring-boot:run         # starts Postgres from compose.yaml, then the API on http://localhost:8085
+mvn test                    # tests use an in-memory H2 database, no Docker needed
 ```
 
-API on http://localhost:8080. Data is kept in `backend/data/` (embedded H2, git-ignored).
+The first start creates the tables and the admin account from `.env`. Postgres keeps its data in the Docker volume `pgdata`
+(`docker compose down -v` in this folder wipes it). The old `backend/data/` H2 folder is no longer used and can be deleted.
 
 ## Endpoints
 
@@ -31,13 +36,14 @@ Saving a garden (`POST /api/gardens`) needs a signed-in user with a verified ema
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `PORT` | 8080 | Port to listen on (set by most hosts) |
+| `PORT` | 8085 | Port to listen on (set by most hosts) |
 | `ALLOWED_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Frontend origins allowed by CORS |
 | `FRONTEND_URL` | `http://localhost:5173` | Used to build email verification links |
 | `JWT_SECRET` | random per start | 32+ characters; set it in production |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | none | Creates the admin account at startup (password 12+ characters) |
 | `SPRING_MAIL_HOST`, `_PORT`, `_USERNAME`, `_PASSWORD` | none | SMTP for verification emails; without it the link is printed in the log |
-| `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD` | H2 file | Hosted database for the live server |
+| `POSTGRES_PASSWORD` | `local-dev-only` | Password of the local Docker Postgres (set it in `.env`) |
+| `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD` | Docker Postgres | Hosted PostgreSQL for the live server |
 
 ## Security basics
 

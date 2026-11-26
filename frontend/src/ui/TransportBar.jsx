@@ -11,7 +11,7 @@ export default function TransportBar({ status, mode, live, comp, now, sleep, exp
     </button>
   );
   return (
-    <div className="transport glass holo" role="toolbar" aria-label="Playback">
+    <div className={`transport glass holo ${playing ? 'is-playing' : ''}`} role="toolbar" aria-label="Playback">
       <div className="progress-row">
         <span>{status === 'idle' ? 'Ready to plant' : `Generation ${live?.generation ?? 1} of ${comp.depth + 1} · ${mode === 'bloom' ? 'Bloom' : 'Trace'}`}</span>
         <span className="muted">{fmt(Math.max(0, status === 'idle' ? 0 : now))} / {fmt(comp.duration)}</span>

@@ -4,12 +4,12 @@ export const DEFAULTS = { seed: 48213, depth: 6, branches: 2, spread: 25, ratio:
 
 /** Slider definitions: range, label, how the value is shown, and a one-line hint. */
 export const SLIDERS = [
-  { key: 'depth', min: 1, max: 8, step: 1, label: 'Depth', fmt: (v) => `${v} levels`, hint: 'More levels = a longer, richer song' },
-  { key: 'spread', min: 10, max: 60, step: 1, label: 'Spread', fmt: (v) => `${v}°`, hint: 'Wider tree, wider stereo' },
-  { key: 'ratio', min: 0.55, max: 0.8, step: 0.01, label: 'Length ratio', fmt: (v) => v.toFixed(2), hint: 'How fast branches and notes shrink' },
-  { key: 'asymmetry', min: 0, max: 1, step: 0.05, label: 'Asymmetry', fmt: (v) => v.toFixed(2), hint: 'Natural randomness in shape and rhythm' },
-  { key: 'tempo', min: 48, max: 80, step: 1, label: 'Growth speed', fmt: (v) => `${v} BPM`, hint: 'Pace of the whole piece' },
-  { key: 'wind', min: 0, max: 1, step: 0.05, label: 'Wind', fmt: (v) => v.toFixed(2), hint: 'Breeze sound, sway and chimes' },
+  { key: 'depth', sym: 'd', min: 1, max: 8, step: 1, label: 'Depth', fmt: (v) => `${v} levels`, hint: 'More levels = a longer, richer song' },
+  { key: 'spread', sym: 'θ', min: 10, max: 60, step: 1, label: 'Spread', fmt: (v) => `${v}°`, hint: 'Wider tree, wider stereo' },
+  { key: 'ratio', sym: 'r', min: 0.55, max: 0.8, step: 0.01, label: 'Length ratio', fmt: (v) => v.toFixed(2), hint: 'How fast branches and notes shrink' },
+  { key: 'asymmetry', sym: 'σ', min: 0, max: 1, step: 0.05, label: 'Asymmetry', fmt: (v) => v.toFixed(2), hint: 'Natural randomness in shape and rhythm' },
+  { key: 'tempo', sym: '♩', min: 48, max: 80, step: 1, label: 'Growth speed', fmt: (v) => `${v} BPM`, hint: 'Pace of the whole piece' },
+  { key: 'wind', sym: 'w', min: 0, max: 1, step: 0.05, label: 'Wind', fmt: (v) => v.toFixed(2), hint: 'Breeze sound, sway and chimes' },
 ];
 
 /** Calls made by grow(): 1 + b + b^2 + ... + b^depth. */
