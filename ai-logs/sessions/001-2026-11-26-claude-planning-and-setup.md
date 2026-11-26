@@ -1461,3 +1461,65 @@ Want me to write the README and set up the GitHub Pages deploy next? This is log
 ### Result
 
 - Not committed yet.
+
+---
+
+## Prompt 22 (10:56 GMT+6)
+
+### Prompt (verbatim)
+
+```text
+Main README	Missing
+Live demo link	Missing
+Demo video	Missing, and may not be required
+Sample WAV in the repo	Missing
+This chat saved as a PDF into ai-logs/raw/
+how to set this up
+```
+
+### Agent response (verbatim)
+
+Three of the five are done in your folder: the README, the sample WAV, and the setup for the live link. The live link needs one setting on GitHub, and the video and the PDF need you.
+
+**1. Main README (done):** `README.md` in the repo root. It covers:
+- The concept and a screenshot.
+- The recursive function and the recursion-to-music mapping table.
+- Features, accessibility and the tech stack.
+- How to run it locally, the folder layout, AI usage and credits.
+
+**2. Sample WAV (done):** `samples/echo-grove-spring-48213.wav`. It's 61 seconds, stereo, exported from the current build. My copy tool added a small "content credentials" tag to the end of the file; the audio itself is byte-for-byte identical.
+
+**3. Live demo link (done on my side; needs one switch from you):** I added `.github/workflows/deploy-pages.yml`, which builds the frontend and publishes it every time you push.
+1. Push everything:
+   ```bash
+   cd ~/Documents/DevHub
+   git add . && git commit -m "docs: README, sample WAV, GitHub Pages deploy [log 001#22]" && git push
+   ```
+2. On GitHub, open the repo, then **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. Open the **Actions** tab. If "Deploy frontend to GitHub Pages" failed because Pages wasn't switched on yet, open it and click **Run workflow**.
+4. After about 2 minutes, the site is live at **https://faiyajjarif.github.io/echo-grove/**. That link is already in the README.
+
+The live site runs in guest mode: all the music, export, play-along and share links work. Accounts need the backend, which only runs locally for now, and the README says so.
+
+**4. Demo video (about 2 minutes, only if they ask for one):** a Mac's built-in screen recording doesn't capture the app's sound. Use **OBS Studio** (free) with a "macOS Screen Capture" source, which records the sound too. A short script:
+1. **0:00–0:20:** Zen mode. Plant a seed and just let it play.
+2. **0:20–0:50:** switch to Trace, open Call stack and Code view, then tap a branch.
+3. **0:50–1:20:** turn a few knobs, change the season, open the maths, switch on ∞ Infinite.
+4. **1:20–1:45:** Play along with the harmony guide.
+5. **1:45–2:00:** download the WAV and PNG, then show the repo and `ai-logs/`.
+
+Upload it to YouTube as unlisted, or to Google Drive with "anyone with the link" access. Then replace "_link added at submission_" in the README with the link.
+
+**5. This chat as a PDF (do it last, right before submitting):** in this chat, scroll to the very top so every message loads, then press **Cmd + P → Save as PDF**. Save it as `ai-logs/raw/001-claude-chat.pdf`, then commit and push. The markdown log in `ai-logs/sessions/` is already complete; the PDF is the untouched backup.
+
+This is logged as prompt 22.
+
+### Actions taken by the agent
+
+- Checked the git remote (`faiyajjarif/echo-grove`) and recent commits.
+- Wrote the root `README.md` and `.github/workflows/deploy-pages.yml` (GitHub Pages via Actions; optional `VITE_API_URL` repo variable).
+- Exported a fresh 61 s WAV from the current build in headless Chrome and copied it to `samples/`. Found that the copy tool appends a C2PA content-credentials chunk; verified the audio data region is byte-identical (md5 68d28e96…).
+
+### Result
+
+- Not committed yet.
