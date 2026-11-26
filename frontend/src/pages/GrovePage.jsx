@@ -249,9 +249,9 @@ export default function GrovePage() {
                 <button key={k} role="radio" aria-checked={mode === k} className={mode === k ? 'on' : ''} onClick={() => setMode(k)}>{l}</button>
               ))}
             </div>
-            <button className={`chip ${infinite ? 'on' : ''}`} aria-pressed={infinite} onClick={toggleInfinite} title="Keep growing new trees forever (I)">∞ Infinite</button>
-            <button className="chip" onClick={exportPng} title="Save the tree as an image (P)"><Icon.download /> PNG</button>
-            <button className={`chip ${piano ? 'on' : ''}`} aria-pressed={piano} onClick={() => setPiano((o) => !o)}><Icon.piano /> Play along</button>
+            <button className={`chip ${infinite ? 'on' : ''}`} aria-pressed={infinite} aria-label="Infinite garden" onClick={toggleInfinite} title="Keep growing new trees forever (I)"><span aria-hidden="true">∞</span><span className="tl">Infinite</span></button>
+            <button className="chip" aria-label="Save as PNG" onClick={exportPng} title="Save the tree as an image (P)"><Icon.download /><span className="tl">PNG</span></button>
+            <button className={`chip ${piano ? 'on' : ''}`} aria-pressed={piano} aria-label="Play along" onClick={() => setPiano((o) => !o)}><Icon.piano /><span className="tl">Play along</span></button>
           </div>
           <p className="tipbar glass"><span className="dot" aria-hidden="true" />{status === 'idle' ? 'Press Plant a seed: sound starts with one click' : TIPS[tip]}</p>
         </div>
